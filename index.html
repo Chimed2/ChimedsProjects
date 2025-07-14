@@ -2,18 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KDE Web Desktop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
   <style>
     * {
       box-sizing: border-box;
       user-select: none;
+      font-family: 'Noto Sans', sans-serif;
     }
 
     body {
       margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: url("https://w.wallhaven.cc/full/ym/wallhaven-ymzgj7.png") no-repeat center center fixed;
+      background: url("https://cdn.kde.org/wallpapers/Next/contents/images/1920x1080.png") no-repeat center center fixed;
       background-size: cover;
       height: 100vh;
       overflow: hidden;
@@ -29,9 +30,9 @@
       position: absolute;
       top: 20px;
       left: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 80px);
+      gap: 30px;
     }
 
     .icon {
@@ -40,6 +41,9 @@
       color: white;
       font-size: 0.8rem;
       cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
     }
 
     .icon img {
@@ -48,10 +52,9 @@
       pointer-events: none;
     }
 
-    .icon.selected {
-      outline: 2px solid #5e81ac;
-      background-color: rgba(94, 129, 172, 0.2);
-      border-radius: 4px;
+    .icon:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
     }
 
     .panel {
@@ -60,18 +63,19 @@
       left: 0;
       height: 48px;
       width: 100%;
-      background: rgba(30, 30, 46, 0.5);
-      backdrop-filter: blur(10px);
+      background: rgba(30, 30, 46, 0.4);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 12px;
+      padding: 0 14px;
       color: #cdd6f4;
       z-index: 100;
     }
 
     .start-button {
-      background-color: #5e81ac;
+      background-color: rgba(94, 129, 172, 0.8);
       border: none;
       border-radius: 6px;
       color: white;
@@ -82,21 +86,21 @@
 
     .clock {
       font-size: 0.9rem;
-      font-weight: 500;
     }
 
     .start-menu {
       position: absolute;
       bottom: 60px;
       left: 10px;
-      background-color: #1e1e2e;
+      background-color: rgba(30, 30, 46, 0.95);
       border-radius: 8px;
       padding: 10px;
       display: none;
       flex-direction: column;
       gap: 8px;
-      width: 200px;
+      width: 220px;
       z-index: 101;
+      backdrop-filter: blur(10px);
     }
 
     .start-menu a {
@@ -123,16 +127,16 @@
 <body>
   <div class="desktop" id="desktop">
     <div class="desktop-icons" id="iconContainer">
-      <div class="icon" ondblclick="openLink('https://gat0bot.duckdns.org/')" data-id="gat0">
-        <img src="https://cdn-icons-png.flaticon.com/512/906/906334.png" alt="Gat0Bot" />
+      <div class="icon" ondblclick="openLink('https://gat0bot.duckdns.org/')">
+        <img src="https://cdn.jsdelivr.net/gh/KDE/breeze-icons/icons/applications-internet.svg" alt="Gat0Bot" />
         <div>Gat0Bot</div>
       </div>
-      <div class="icon" ondblclick="openLink('https://ArchLinuxSimulator.duckdns.org/')" data-id="arch">
-        <img src="https://cdn-icons-png.flaticon.com/512/226/226772.png" alt="Arch" />
+      <div class="icon" ondblclick="openLink('https://ArchLinuxSimulator.duckdns.org/')">
+        <img src="https://cdn.jsdelivr.net/gh/KDE/breeze-icons/icons/utilities-terminal.svg" alt="Arch Sim" />
         <div>Arch Sim</div>
       </div>
-      <div class="icon" ondblclick="openLink('https://www.youtube.com/channel/UCGo8wbBgyvXQ8ix_TtjdxQw')" data-id="youtube">
-        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube" />
+      <div class="icon" ondblclick="openLink('https://www.youtube.com/channel/UCGo8wbBgyvXQ8ix_TtjdxQw')">
+        <img src="https://cdn.jsdelivr.net/gh/KDE/breeze-icons/icons/applications-multimedia.svg" alt="YouTube" />
         <div>YouTube</div>
       </div>
     </div>
@@ -159,7 +163,6 @@
       menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     }
 
-    // Hide start menu on outside click
     document.addEventListener("click", (e) => {
       const menu = document.getElementById("startMenu");
       const button = document.querySelector(".start-button");
@@ -168,61 +171,11 @@
       }
     });
 
-    // Update clock every second
     setInterval(() => {
       const now = new Date();
       const clock = document.getElementById("clock");
-      clock.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }, 1000);
-
-    // Drag selection box
-    const desktop = document.getElementById("desktop");
-    const icons = document.querySelectorAll(".icon");
-    let box = null;
-    let startX, startY;
-
-    desktop.addEventListener("mousedown", (e) => {
-      // Don't start box if clicking on a button or icon
-      if (e.target.closest(".panel") || e.target.closest(".icon") || e.target.closest(".start-menu")) return;
-
-      box = document.createElement("div");
-      box.className = "selection-box";
-      desktop.appendChild(box);
-      startX = e.clientX;
-      startY = e.clientY;
-
-      box.style.left = `${startX}px`;
-      box.style.top = `${startY}px`;
-      box.style.width = `0px`;
-      box.style.height = `0px`;
-
-      function onMouseMove(ev) {
-        const x = Math.min(ev.clientX, startX);
-        const y = Math.min(ev.clientY, startY);
-        const w = Math.abs(ev.clientX - startX);
-        const h = Math.abs(ev.clientY - startY);
-        box.style.left = `${x}px`;
-        box.style.top = `${y}px`;
-        box.style.width = `${w}px`;
-        box.style.height = `${h}px`;
-
-        const boxRect = box.getBoundingClientRect();
-        icons.forEach(icon => {
-          const rect = icon.getBoundingClientRect();
-          const isIntersecting = !(rect.right < boxRect.left || rect.left > boxRect.right || rect.bottom < boxRect.top || rect.top > boxRect.bottom);
-          icon.classList.toggle("selected", isIntersecting);
-        });
-      }
-
-      function onMouseUp() {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-        if (box) box.remove();
-      }
-
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-    });
   </script>
 </body>
 </html>
