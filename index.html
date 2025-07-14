@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My KDE Desktop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KDE Web Desktop</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,7 +13,7 @@
     body {
       margin: 0;
       font-family: "Segoe UI", sans-serif;
-      background: url('https://wallpapercave.com/wp/wp5128415.jpg') no-repeat center center fixed;
+      background: url("https://w.wallhaven.cc/full/ym/wallhaven-ymzgj7.png") no-repeat center center fixed;
       background-size: cover;
       height: 100vh;
       overflow: hidden;
@@ -25,52 +25,64 @@
       height: 100%;
     }
 
-    .icon {
-      width: 80px;
-      text-align: center;
-      color: white;
-      font-size: 0.8rem;
-      margin: 10px;
-      cursor: pointer;
-    }
-
-    .icon img {
-      width: 64px;
-      height: 64px;
-    }
-
     .desktop-icons {
       position: absolute;
       top: 20px;
       left: 20px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 16px;
     }
 
-    .taskbar {
+    .icon {
+      width: 80px;
+      text-align: center;
+      color: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .icon img {
+      width: 64px;
+      height: 64px;
+      pointer-events: none;
+    }
+
+    .icon.selected {
+      outline: 2px solid #5e81ac;
+      background-color: rgba(94, 129, 172, 0.2);
+      border-radius: 4px;
+    }
+
+    .panel {
       position: absolute;
       bottom: 0;
       left: 0;
+      height: 48px;
       width: 100%;
-      height: 50px;
-      background-color: rgba(30, 30, 46, 0.85);
+      background: rgba(30, 30, 46, 0.5);
+      backdrop-filter: blur(10px);
       display: flex;
       align-items: center;
-      padding: 0 10px;
-      justify-content: flex-start;
+      justify-content: space-between;
+      padding: 0 12px;
+      color: #cdd6f4;
       z-index: 100;
     }
 
     .start-button {
       background-color: #5e81ac;
-      color: white;
       border: none;
       border-radius: 6px;
-      padding: 6px 12px;
+      color: white;
       font-weight: bold;
+      padding: 6px 14px;
       cursor: pointer;
-      margin-right: 10px;
+    }
+
+    .clock {
+      font-size: 0.9rem;
+      font-weight: 500;
     }
 
     .start-menu {
@@ -98,27 +110,36 @@
     .start-menu a:hover {
       background-color: #5e81ac;
     }
+
+    .selection-box {
+      position: absolute;
+      border: 2px dashed #81a1c1;
+      background: rgba(129, 161, 193, 0.2);
+      pointer-events: none;
+      z-index: 99;
+    }
   </style>
 </head>
 <body>
-  <div class="desktop">
-    <div class="desktop-icons">
-      <div class="icon" ondblclick="openLink('https://gat0bot.duckdns.org/')">
-        <img src="https://cdn-icons-png.flaticon.com/512/906/906334.png" alt="Gat0Bot">
+  <div class="desktop" id="desktop">
+    <div class="desktop-icons" id="iconContainer">
+      <div class="icon" ondblclick="openLink('https://gat0bot.duckdns.org/')" data-id="gat0">
+        <img src="https://cdn-icons-png.flaticon.com/512/906/906334.png" alt="Gat0Bot" />
         <div>Gat0Bot</div>
       </div>
-      <div class="icon" ondblclick="openLink('https://ArchLinuxSimulator.duckdns.org/')">
-        <img src="https://cdn-icons-png.flaticon.com/512/226/226772.png" alt="Arch">
+      <div class="icon" ondblclick="openLink('https://ArchLinuxSimulator.duckdns.org/')" data-id="arch">
+        <img src="https://cdn-icons-png.flaticon.com/512/226/226772.png" alt="Arch" />
         <div>Arch Sim</div>
       </div>
-      <div class="icon" ondblclick="openLink('https://www.youtube.com/channel/UCGo8wbBgyvXQ8ix_TtjdxQw')">
-        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube">
+      <div class="icon" ondblclick="openLink('https://www.youtube.com/channel/UCGo8wbBgyvXQ8ix_TtjdxQw')" data-id="youtube">
+        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube" />
         <div>YouTube</div>
       </div>
     </div>
 
-    <div class="taskbar">
+    <div class="panel">
       <button class="start-button" onclick="toggleStartMenu()">Start</button>
+      <div class="clock" id="clock"></div>
     </div>
 
     <div class="start-menu" id="startMenu">
@@ -138,13 +159,69 @@
       menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     }
 
-    // Optional: hide start menu when clicking outside
-    document.addEventListener("click", function (e) {
+    // Hide start menu on outside click
+    document.addEventListener("click", (e) => {
       const menu = document.getElementById("startMenu");
       const button = document.querySelector(".start-button");
       if (!menu.contains(e.target) && !button.contains(e.target)) {
         menu.style.display = "none";
       }
+    });
+
+    // Update clock every second
+    setInterval(() => {
+      const now = new Date();
+      const clock = document.getElementById("clock");
+      clock.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }, 1000);
+
+    // Drag selection box
+    const desktop = document.getElementById("desktop");
+    const icons = document.querySelectorAll(".icon");
+    let box = null;
+    let startX, startY;
+
+    desktop.addEventListener("mousedown", (e) => {
+      // Don't start box if clicking on a button or icon
+      if (e.target.closest(".panel") || e.target.closest(".icon") || e.target.closest(".start-menu")) return;
+
+      box = document.createElement("div");
+      box.className = "selection-box";
+      desktop.appendChild(box);
+      startX = e.clientX;
+      startY = e.clientY;
+
+      box.style.left = `${startX}px`;
+      box.style.top = `${startY}px`;
+      box.style.width = `0px`;
+      box.style.height = `0px`;
+
+      function onMouseMove(ev) {
+        const x = Math.min(ev.clientX, startX);
+        const y = Math.min(ev.clientY, startY);
+        const w = Math.abs(ev.clientX - startX);
+        const h = Math.abs(ev.clientY - startY);
+        box.style.left = `${x}px`;
+        box.style.top = `${y}px`;
+        box.style.width = `${w}px`;
+        box.style.height = `${h}px`;
+
+        const boxRect = box.getBoundingClientRect();
+        icons.forEach(icon => {
+          const rect = icon.getBoundingClientRect();
+          const isIntersecting = !(rect.right < boxRect.left || rect.left > boxRect.right || rect.bottom < boxRect.top || rect.top > boxRect.bottom);
+          icon.classList.toggle("selected", isIntersecting);
+        });
+      }
+
+      function onMouseUp() {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        if (box) box.remove();
+      }
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
     });
   </script>
 </body>
